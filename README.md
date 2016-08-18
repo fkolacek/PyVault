@@ -1,6 +1,27 @@
-Vault
+# Vault
 
-Usage:
+Yet another implementation of Vault using pure Python (json and gnupg modules). This has nothing to do with Vault provided by Hashicorp. This is also not supposed nor recommended to use in any production environment.
+
+## Usage:
+
+If you want to create/write new entry just use:
+~~~
+$ vault.py write <filename> <key> <value>
+~~~
+
+for reading use:
+```
+$ vault.py read <filename> <key>
+```
+
+## TODO
+
+ - Implement delete functionality
+ - Implement data encryption (planning to use gnupg module and symmetric encryption
+
+
+## Working example
+```
 0 ✓ 0s fkolacek@carby ~ $ vault.py write ~/vault.db /servers/production/saber.example.com/root password1
 [*] Vault /home/fkolacek/vault.db does not exist, creating one.
 0 ✓ 0s fkolacek@carby ~ $ vault.py write ~/vault.db /servers/production/shiny.example.com/root password2
@@ -54,3 +75,8 @@ password1
 0 ✓ 0s fkolacek@carby ~ $ vault.py write ~/vault.db /servers/nas.home.example.com password9
 [!] Entry /servers already exists, delete it first!
 
+```
+
+## Author
+
+Frantisek Kolacek (<fkolacek@redhat.com>)
