@@ -19,6 +19,11 @@ for deleting old entries use:
 $ pyvault delete <filename> <key>
 ```
 
+it is also possible to dump all passwords:
+```
+$ pyvault dump <filename>
+```
+
 ## TODO
 
  - Implement data encryption (planning to use gnupg module and symmetric encryption
@@ -66,6 +71,15 @@ $ pyvault delete <filename> <key>
         }
     }
 }
+0 ✓ 0s fkolacek@carby ~ $ pyvault dump ~/vault.db
+/service/lastpass/fkolacek@redhat.com password8
+/service/teampass/fkolacek@redhat.com password7
+/servers/production/saber.sniff.ws/root password1
+/servers/production/shiny.sniff.ws/root password2
+/servers/nas.home.sniff.ws/root password6
+/servers/stage/lenny.sniff.ws password5
+/servers/stage/kenny.sniff.ws/root password3
+/servers/stage/kenny.sniff.ws/mysql password4
 0 ✓ 0s fkolacek@carby ~ $ pyvault read ~/vault.db /servers/production/saber.example.com/root
 password1
 0 ✓ 0s fkolacek@carby ~ $ pyvault read ~/vault.db /servers/stage/kenny.example.com

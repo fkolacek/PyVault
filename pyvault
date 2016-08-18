@@ -139,6 +139,21 @@ class Store(object):
     self.saveFile()
 
   #---------------------------------------------
+  # Store::dump
+  #---------------------------------------------
+  def dump(self):
+    self.dumpAll(self.content, [])
+
+  def dumpAll(self, d, l):
+    for key, val in d.iteritems():
+      if isinstance(val, dict):
+        l.append(key)
+        self.dumpAll(val, l)
+        del l[-1]
+      else:
+        print "/{0}/{1} {2}".format('/'.join(l), key, val)
+
+  #---------------------------------------------
   # Store::checkKey
   #---------------------------------------------
   def checkKey(self, key):
@@ -183,7 +198,8 @@ Available commands are:
   init     Initialize specified vault
   read     Read specific entry
   write    Write specific entry
-  delete   Delete specific entry''')
+  delete   Delete specific entry
+  dump     Dump all entries''')
 
     parser.add_argument("command", help="Subcommand to run")
 
@@ -242,6 +258,17 @@ Available commands are:
 
     self.store = Store(args.filename[1])
     self.store.delete(args.key[0])
+
+  #---------------------------------------------
+  # Vault::dump
+  #---------------------------------------------
+  def dump(self):
+    parser = cParser(description=self.description, add_help=False, usage="pyvault dump <filename>")
+    parser.add_argument("filename", nargs=2, help="Path to specified vault")
+    args = parser.parse_args()
+
+    self.store = Store(args.filename[1])
+    self.store.dump()
 
 #---------------------------------------------
 # Main
