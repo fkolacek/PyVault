@@ -10,18 +10,30 @@ import argparse
 import json
 from pprint import pprint
 
+#---------------------------------------------
+# printMsg
+#---------------------------------------------
 def printMsg(errorMessage):
   print "[*] %s" % errorMessage
 
+#---------------------------------------------
+# printError
+#---------------------------------------------
 def printError(errorMessage, errorCode):
   print "[!] %s" % errorMessage
   exit(errorCode)
 
+#---------------------------------------------
+# cParser
+#---------------------------------------------
 class cParser(argparse.ArgumentParser):
   def error(self, message):
     self.print_help()
     exit(2)
 
+#---------------------------------------------
+# Store
+#---------------------------------------------
 class Store(object):
 
   filename = None
@@ -80,6 +92,9 @@ class Store(object):
 
       print obj[indexes[-1]]
 
+  def delete(self, key):
+    pass
+
   def checkKey(self, key):
     if not key.startswith('/'):
       raise Exception('Invalid entry (should start with /)')
@@ -97,14 +112,20 @@ class Store(object):
       json.dump(self.content, f)
     f.closed
 
+#---------------------------------------------
+# Vault
+#---------------------------------------------
 class Vault(object):
 
-  description = "vault.py - Custom vault (fkolacek@redhat.com)"
+  description = "pvault - Custom vault (fkolacek@redhat.com)"
   store = None
 
+  #---------------------------------------------
+  # Vault::__init__
+  #---------------------------------------------
   def __init__(self):
     parser = cParser(
-      description=self.description, add_help=False, usage='''vault.py <command>
+      description=self.description, add_help=False, usage='''pvault <command>
 
 Available commands are:
   init     Initialize specified vault
@@ -116,21 +137,28 @@ Available commands are:
 
     args = parser.parse_args(sys.argv[1:2])
 
+    # If subcommand is not defined
     if not hasattr(self, args.command):
       parser.print_help()
       exit(1)
 
     getattr(self, args.command)()
 
+  #---------------------------------------------
+  # Vault::init
+  #---------------------------------------------
   def init(self):
-    parser = cParser(description=self.description, add_help=False, usage="vault.py init <filename>")
+    parser = cParser(description=self.description, add_help=False, usage="pvault init <filename>")
     parser.add_argument("filename", nargs=2, help="Path to specified vault")
     args = parser.parse_args()
 
     self.store = Store(args.filename[1])
 
+  #---------------------------------------------
+  # Vault::write
+  #---------------------------------------------
   def write(self):
-    parser = cParser(description=self.description, add_help=False, usage="vault.py write <filename> <key> <value>")
+    parser = cParser(description=self.description, add_help=False, usage="pvault write <filename> <key> <value>")
     parser.add_argument("filename", nargs=2, help="Path to specified vault")
     parser.add_argument("key", nargs=1, help="Entry key")
     parser.add_argument("value", nargs=1, help="Entry value")
@@ -139,8 +167,11 @@ Available commands are:
     self.store = Store(args.filename[1])
     self.store.write(args.key[0], args.value[0])
 
+  #---------------------------------------------
+  # Vault::read
+  #---------------------------------------------
   def read(self):
-    parser = cParser(description=self.description, add_help=False, usage="vault.py read <filename> <key>")
+    parser = cParser(description=self.description, add_help=False, usage="pvault read <filename> <key>")
     parser.add_argument("filename", nargs=2, help="Path to specified vault")
     parser.add_argument("key", nargs=1, help="Entry key")
     args = parser.parse_args()
@@ -148,9 +179,21 @@ Available commands are:
     self.store = Store(args.filename[1])
     self.store.read(args.key[0])
 
+  #---------------------------------------------
+  # Vault::delete
+  #---------------------------------------------
   def delete(self):
-    pass
+    parser = cParser(description=self.description, add_help=False, usage="pvault delete <filename> <key>")
+    parser.add_argument("filename", nargs=2, help="Path to specified vault")
+    parser.add_argument("key", nargs=1, help="Entry key")
+    args = parser.parse_args()
 
+    self.store = Store(args.filename[1])
+    self.store.delete(args.key[0])
+
+#---------------------------------------------
+# Main
+#---------------------------------------------
 if __name__ == '__main__':
 
   try:
