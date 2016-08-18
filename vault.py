@@ -1,6 +1,6 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
-# Description: 
+# Description: Yet another implementation of Vault using pure Python (json and gnupg modules)
 # Author: fkolacek@redhat.com
 # Version: 0.1a
 
@@ -82,10 +82,10 @@ class Store(object):
 
   def checkKey(self, key):
     if not key.startswith('/'):
-      raise Exception('Invalid key (should start with /)')
+      raise Exception('Invalid entry (should start with /)')
 
     if key.endswith('/') and key != '/':
-      raise Exception('Invalid key (should not end with /)')
+      raise Exception('Invalid entry (should not end with /)')
 
   def loadFile(self):
     with open(self.filename, 'r') as f:
