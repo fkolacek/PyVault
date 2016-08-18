@@ -39,6 +39,9 @@ class Store(object):
   filename = None
   content = {}
 
+  #---------------------------------------------
+  # Store::__init__
+  #---------------------------------------------
   def __init__(self, filename):
     self.filename = filename
 
@@ -48,13 +51,20 @@ class Store(object):
     else:
       self.loadFile()
 
+  #---------------------------------------------
+  # Store::write
+  #---------------------------------------------
   def write(self, key, val):
     self.checkKey(key)
 
     obj = self.content
+    # Split parts and remove first one (blank one)
     indexes = key.split('/')[1:]
     indexes_done = []
+
     for index in indexes[:-1]:
+      indexes_done.append(index)
+
       if not isinstance(obj, dict):
         raise Exception("Entry /%s already exists, delete it first!" % '/'.join(indexes_done))
 
@@ -62,15 +72,20 @@ class Store(object):
         obj[index] = {}
 
       obj = obj[index]
-      indexes_done.append(index)
 
     if not isinstance(obj, dict):
-      raise Exception("Entry /%s already exists, delete it first!" % '/'.join(indexes_done))
+      raise Exception("Entry %s already exists, delete it first!" % key)
+
+    if indexes[-1] in obj and isinstance(obj[indexes[-1]], dict) and len(obj[indexes[-1]]) > 0:
+      raise Exception("XEntry %s already exists, delete it first!" % key)
 
     obj[indexes[-1]] = val
 
     self.saveFile()
 
+  #---------------------------------------------
+  # Store::read
+  #---------------------------------------------
   def read(self, key):
     self.checkKey(key)
 
@@ -92,9 +107,40 @@ class Store(object):
 
       print obj[indexes[-1]]
 
+  #---------------------------------------------
+  # Store::delete
+  #---------------------------------------------
   def delete(self, key):
-    pass
+    self.checkKey(key)
 
+    if key == '/':
+      raise Exception("Entry / cannot be removed")
+
+    obj = self.content
+    # Split parts and remove first one (blank one)
+    indexes = key.split('/')[1:]
+    indexes_done = []
+    for index in indexes[:-1]:
+
+      if index not in obj:
+        raise Exception("Entry /%s does not exist!" % '/'.join(indexes_done))
+
+      obj = obj[index]
+      indexes_done.append(index)
+
+    if indexes[-1] not in obj:
+      raise Exception("Entry /%s/%s does not exist!" % ('/'.join(indexes_done), indexes[-1]))
+
+    if isinstance(obj[indexes[-1]], dict) and len(obj[indexes[-1]]) > 0:
+      raise Exception("Entry /%s/%s contains some entries, delete them first!" % ('/'.join(indexes_done), indexes[-1]))
+
+    del obj[indexes[-1]]
+
+    self.saveFile()
+
+  #---------------------------------------------
+  # Store::checkKey
+  #---------------------------------------------
   def checkKey(self, key):
     if not key.startswith('/'):
       raise Exception('Invalid entry (should start with /)')
@@ -102,11 +148,17 @@ class Store(object):
     if key.endswith('/') and key != '/':
       raise Exception('Invalid entry (should not end with /)')
 
+  #---------------------------------------------
+  # Store::loadFile
+  #---------------------------------------------
   def loadFile(self):
     with open(self.filename, 'r') as f:
       self.content = json.load(f)
     f.closed
 
+  #---------------------------------------------
+  # Store::saveFile
+  #---------------------------------------------
   def saveFile(self):
     with open(self.filename, 'w') as f:
       json.dump(self.content, f)
