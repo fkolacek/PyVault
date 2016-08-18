@@ -12,11 +12,15 @@ $ pyvault write <filename> <key> <value>
 for reading use:
 ```
 $ pyvault read <filename> <key>
+
+```
+for deleting old entries use:
+```
+$ pyvault delete <filename> <key>
 ```
 
 ## TODO
 
- - Implement delete functionality
  - Implement data encryption (planning to use gnupg module and symmetric encryption
 
 
