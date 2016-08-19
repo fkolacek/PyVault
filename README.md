@@ -28,6 +28,11 @@ it is also possible to dump all passwords:
 $ pyvault dump
 ```
 
+or using read:
+~~~
+$ pyvault read / | jq
+~~~
+
 ## TODO
  - Implement data encryption (planning to use gnupg module and symmetric encryption
 
@@ -42,13 +47,13 @@ $ pyvault dump
 0 ✓ 0s ~$ pyvault init
 [*] Vault .vaultdb does not exist, creating one.
 0 ✓ 0s ~$ pyvault write /servers/production/saber.example.com/root password1
-0 ✓ 0s ~$ pyvault write  /servers/production/shiny.example.com/root password2
-0 ✓ 0s ~$ pyvault write  /servers/stage/kenny.example.com/root password3
-0 ✓ 0s ~$ pyvault write  /servers/stage/kenny.example.com/mysql password4
-0 ✓ 0s ~$ pyvault write  /servers/stage/lenny.example.com password5
-0 ✓ 0s ~$ pyvault write  /servers/nas.home.example.com/root password6
-0 ✓ 0s ~$ pyvault write  '/services/teampass/fkolacek@redhat.com' password7
-0 ✓ 0s ~$ pyvault write  '/services/lastpass/fkolacek@redhat.com' password8
+0 ✓ 0s ~$ pyvault write /servers/production/shiny.example.com/root password2
+0 ✓ 0s ~$ pyvault write /servers/stage/kenny.example.com/root password3
+0 ✓ 0s ~$ pyvault write /servers/stage/kenny.example.com/mysql password4
+0 ✓ 0s ~$ pyvault write /servers/stage/lenny.example.com password5
+0 ✓ 0s ~$ pyvault write /servers/nas.home.example.com/root password6
+0 ✓ 0s ~$ pyvault write '/services/teampass/fkolacek@redhat.com' password7
+0 ✓ 0s ~$ pyvault write '/services/lastpass/fkolacek@redhat.com' password8
 
 0 ✓ 0s ~$ pyvault dump
 /service/lastpass/fkolacek@redhat.com password8
