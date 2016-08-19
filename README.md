@@ -26,7 +26,6 @@ $ pyvault dump
 ## TODO
  - Implement data encryption (planning to use gnupg module and symmetric encryption
 
-
 ## Features
  - Bash autocompletion for commands
  - Using PGP encryption as backend
@@ -35,16 +34,33 @@ $ pyvault dump
 
 ## Working example
 ```
-0 ✓ 0s fkolacek@carby ~ $ pyvault write /servers/production/saber.example.com/root password1
+0 ✓ 0s ~$ pyvault init
 [*] Vault .vaultdb does not exist, creating one.
-0 ✓ 0s fkolacek@carby ~ $ pyvault write  /servers/production/shiny.example.com/root password2
-0 ✓ 0s fkolacek@carby ~ $ pyvault write  /servers/stage/kenny.example.com/root password3
-0 ✓ 0s fkolacek@carby ~ $ pyvault write  /servers/stage/kenny.example.com/mysql password4
-0 ✓ 0s fkolacek@carby ~ $ pyvault write  /servers/stage/lenny.example.com password5
-0 ✓ 0s fkolacek@carby ~ $ pyvault write  /servers/nas.home.example.com/root password6
-0 ✓ 0s fkolacek@carby ~ $ pyvault write  '/services/teampass/fkolacek@redhat.com' password7
-0 ✓ 0s fkolacek@carby ~ $ pyvault write  '/services/lastpass/fkolacek@redhat.com' password8
-0 ✓ 0s fkolacek@carby ~ $ cat .vaultdb | python -mjson.tool
+0 ✓ 0s ~$ pyvault write /servers/production/saber.example.com/root password1
+0 ✓ 0s ~$ pyvault write  /servers/production/shiny.example.com/root password2
+0 ✓ 0s ~$ pyvault write  /servers/stage/kenny.example.com/root password3
+0 ✓ 0s ~$ pyvault write  /servers/stage/kenny.example.com/mysql password4
+0 ✓ 0s ~$ pyvault write  /servers/stage/lenny.example.com password5
+0 ✓ 0s ~$ pyvault write  /servers/nas.home.example.com/root password6
+0 ✓ 0s ~$ pyvault write  '/services/teampass/fkolacek@redhat.com' password7
+0 ✓ 0s ~$ pyvault write  '/services/lastpass/fkolacek@redhat.com' password8
+
+0 ✓ 0s ~$ pyvault dump
+/service/lastpass/fkolacek@redhat.com password8
+/service/teampass/fkolacek@redhat.com password7
+/servers/production/saber.example.com/root password1
+/servers/production/shiny.example.com/root password2
+/servers/nas.home.example.com/root password6
+/servers/stage/lenny.example.com password5
+/servers/stage/kenny.example.com/root password3
+/servers/stage/kenny.example.com/mysql password4
+
+0 ✓ 0s ~$ pyvault read /servers/production/saber.example.com/root
+password1
+0 ✓ 0s ~$ pyvault read /servers/stage/kenny.example.com
+{u'root': u'password3', u'mysql': u'password4'}
+
+0 ✓ 0s ~$ pyvault read / | python -mjson.tool
 {
     "servers": {
         "nas.home.example.com": {
@@ -75,28 +91,14 @@ $ pyvault dump
         }
     }
 }
-0 ✓ 0s fkolacek@carby ~ $ pyvault dump
-/service/lastpass/fkolacek@redhat.com password8
-/service/teampass/fkolacek@redhat.com password7
-/servers/production/saber.sniff.ws/root password1
-/servers/production/shiny.sniff.ws/root password2
-/servers/nas.home.sniff.ws/root password6
-/servers/stage/lenny.sniff.ws password5
-/servers/stage/kenny.sniff.ws/root password3
-/servers/stage/kenny.sniff.ws/mysql password4
-0 ✓ 0s fkolacek@carby ~ $ pyvault read /servers/production/saber.example.com/root
-password1
-0 ✓ 0s fkolacek@carby ~ $ pyvault read /servers/stage/kenny.example.com
-{u'root': u'password3', u'mysql': u'password4'}
-0 ✓ 0s fkolacek@carby ~ $ pyvault read /
-{u'services': {u'lastpass': {u'fkolacek@redhat.com': u'password8'}, u'teampass': {u'fkolacek@redhat.com': u'password7'}}, u'servers': {u'production': {u'saber.example.com': {u'root': u'password1'}, u'shiny.example.com': {u'root': u'password2'}}, u'nas.home.example.com': {u'root': u'password6'}, u'stage': {u'lenny.example.com': u'password5', u'kenny.example.com': {u'root': u'password3', u'mysql': u'password4'}}}}
-0 ✓ 0s fkolacek@carby ~ $ pyvault read /404
-2 ✗ 0s fkolacek@carby ~ $ pyvault read /servers/
-[!] Invalid key (should not end with /)
-2 ✗ 0s fkolacek@carby ~ $ pyvault write /servers password9
-0 ✓ 0s fkolacek@carby ~ $ pyvault write /servers/nas.home.example.com password9
-[!] Entry /servers already exists, delete it first!
 
+0 ✓ 0s ~$ pyvault read /404
+2 ✗ 0s ~$ pyvault read /servers/
+[!] Entry name must not end with /
+2 ✗ 0s ~$ pyvault write /servers password9
+[!] Entry /servers already exists, delete it first
+0 ✓ 0s ~$ pyvault write /servers/nas.home.example.com password9
+[!] Entry /servers/nas.home.example.com already exists, delete it first
 ```
 
 ## Author
