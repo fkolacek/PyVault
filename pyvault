@@ -74,10 +74,10 @@ class Store(object):
       obj = obj[index]
 
     if not isinstance(obj, dict):
-      raise Exception("XEntry /{0} already exists, delete it first".format(key).replace('//', '/'))
+      raise Exception("Entry /{0} already exists, delete it first".format(key).replace('//', '/'))
 
     if indexes[-1] in obj and isinstance(obj[indexes[-1]], dict) and len(obj[indexes[-1]]) > 0:
-      raise Exception("XEntry /{0} already exists, delete it first".format(key).replace('//', '/'))
+      raise Exception("Entry /{0} already exists, delete it first".format(key).replace('//', '/'))
 
     obj[indexes[-1]] = val
 
@@ -92,7 +92,7 @@ class Store(object):
     obj = self.content
 
     if key == '/':
-      print obj
+      print json.dumps(obj)
     else:
       indexes = key.split('/')[1:]
 
@@ -105,7 +105,10 @@ class Store(object):
       if indexes[-1] not in obj:
         exit(2)
 
-      print obj[indexes[-1]]
+      if isinstance(obj[indexes[-1]], basestring):
+        print obj[indexes[-1]]
+      else:
+        print json.dumps(obj[indexes[-1]])
 
   #---------------------------------------------
   # Store::delete
