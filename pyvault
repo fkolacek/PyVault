@@ -8,6 +8,7 @@ import sys
 import os
 import argparse
 import json
+import getpass
 from pprint import pprint
 
 #---------------------------------------------
@@ -38,6 +39,7 @@ class Store(object):
 
   gpg = None
   filename = None
+  passphrase = None
   content = {}
 
   #---------------------------------------------
@@ -48,6 +50,8 @@ class Store(object):
     self.gpg.charset = "utf-8"
 
     self.filename = filename
+
+    self.passphrase=getpass.getpass()
 
     if not os.path.exists(self.filename):
       printMsg("Vault {0} does not exist, creating one.".format(self.filename))
@@ -178,7 +182,7 @@ class Store(object):
       contentEncrypted = f.read()
     f.closed
 
-    content = str(self.gpg.decrypt(contentEncrypted, passphrase='default' ))
+    content = str(self.gpg.decrypt(contentEncrypted, passphrase=self.passphrase))
 
     self.content = json.loads(content)
 
@@ -187,7 +191,7 @@ class Store(object):
   #---------------------------------------------
   def saveFile(self):
     content = json.dumps(self.content)
-    contentEcrypted = self.gpg.encrypt(content, recipients=None, symmetric=True, armor=True, passphrase='default')
+    contentEcrypted = self.gpg.encrypt(content, recipients=None, symmetric=True, armor=True, passphrase=self.passphrase)
 
     with open(self.filename, 'w') as f:
       f.write(str(contentEcrypted))
