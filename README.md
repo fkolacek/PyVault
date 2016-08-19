@@ -4,7 +4,12 @@ Yet another implementation of Vault using pure Python (json and gnupg modules). 
 
 ## Usage:
 
-If you want to create/write new entry just use:
+First of all you should initialize your vault using:
+~~~
+$ pyvault init
+~~~
+
+if you want to create/write new entry just use:
 ~~~
 $ pyvault write <key> <value>
 ~~~
@@ -58,7 +63,7 @@ $ pyvault dump
 0 ✓ 0s ~$ pyvault read /servers/production/saber.example.com/root
 password1
 0 ✓ 0s ~$ pyvault read /servers/stage/kenny.example.com
-{u'root': u'password3', u'mysql': u'password4'}
+{'root': 'password3', 'mysql': 'password4'}
 
 0 ✓ 0s ~$ pyvault read / | python -mjson.tool
 {
