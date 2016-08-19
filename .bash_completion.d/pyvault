@@ -1,0 +1,64 @@
+# Description: Autocomplete file for pyvault
+# Author: fkolacek@redhat.com
+# Version: 0.1a
+# Dependencies: /usr/share/bash-completion/bash_completion
+
+_pyvault()
+{
+  local cur prev
+  COMPREPLY=()
+  cur="${COMP_WORDS[COMP_CWORD]}"
+  prev="${COMP_WORDS[COMP_CWORD-1]}"
+
+  case ${COMP_CWORD} in
+  1)
+    COMPREPLY=($(compgen -W "init read write delete dump" ${cur}))
+    ;;
+  2)
+    case ${prev} in
+      init|dump)
+        COMPREPLY=($(compgen -W "--vault" -- ${cur}))
+        ;;
+      read|write|delete)
+        COMPREPLY=()
+        ;;
+    esac
+    ;;
+  3)
+    case ${prev} in
+      --vault)
+        _filedir
+        ;;
+      *)
+        case ${COMP_WORDS[COMP_CWORD-2]} in
+          read|delete)
+            COMPREPLY=($(compgen -W "--vault" -- ${cur}))
+          ;;
+        esac
+        ;;
+    esac
+    ;;
+  4)
+    case ${prev} in
+      --vault)
+        _filedir
+        ;;
+      *)
+        case ${COMP_WORDS[COMP_CWORD-3]} in
+          write)
+            COMPREPLY=($(compgen -W "--vault" -- ${cur}))
+            ;;
+        esac
+    esac
+    ;;
+  5)
+    case ${prev} in
+      --vault)
+        _filedir
+        ;;
+    esac
+    ;;
+  esac
+}
+
+complete -F _pyvault pyvault
