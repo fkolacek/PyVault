@@ -12,7 +12,6 @@ $ pyvault write <key> <value>
 for reading use:
 ```
 $ pyvault read <key>
-
 ```
 for deleting old entries use:
 ```
@@ -25,9 +24,14 @@ $ pyvault dump
 ```
 
 ## TODO
-
  - Implement data encryption (planning to use gnupg module and symmetric encryption
 
+
+## Features
+ - Bash autocompletion for commands
+ - Using PGP encryption as backend
+ - Written in pure Python (no external dependencies)
+ - Data integrity checking (cannot override data by accident)
 
 ## Working example
 ```
