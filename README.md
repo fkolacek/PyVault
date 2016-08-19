@@ -55,6 +55,18 @@ $ pyvault read / | jq
 0 ✓ 0s ~$ pyvault write '/services/teampass/fkolacek@redhat.com' password7
 0 ✓ 0s ~$ pyvault write '/services/lastpass/fkolacek@redhat.com' password8
 
+0 ✓ 0s ~$ cat .vaultdb
+-----BEGIN PGP MESSAGE-----
+Version: GnuPG v1
+
+jA0EBwMCRsQUxljBIyNg0sAeAQmIxQ01+jPoratIC9byYJ/HL134Xftz0wC/7O3O
+oONGtzI6/xWvQdt0zYva1L9GeYRUWaRl06XnMZ9b8gU8vt1ztFP+kCBQ629pzcS2
+33OMVWy+UmEI9HAUZRS+W4NZuYJojRTsACvJaNB89nk2hy6ghgrEtzfoC5Bvamja
+wMex5Qx0MZEsELxv8hx24IoH7RxFvPul+6aJ7UizjgneUGJaGVXFccjeZSLkC5OX
+fPQ72DqUcaFv0K3qvQJkcu2lhg2qR/ZcNW16pKBV0nw6lJHI1SybncAEJ17iRFoz
+=ivLc
+-----END PGP MESSAGE-----
+
 0 ✓ 0s ~$ pyvault dump
 /service/lastpass/fkolacek@redhat.com password8
 /service/teampass/fkolacek@redhat.com password7

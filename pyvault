@@ -36,6 +36,7 @@ class cParser(argparse.ArgumentParser):
 #---------------------------------------------
 class Store(object):
 
+  gpg = None
   filename = None
   content = {}
 
@@ -43,6 +44,9 @@ class Store(object):
   # Store::__init__
   #---------------------------------------------
   def __init__(self, filename):
+    self.gpg = gnupg.GPG()
+    self.gpg.charset = "utf-8"
+
     self.filename = filename
 
     if not os.path.exists(self.filename):
@@ -171,15 +175,22 @@ class Store(object):
   #---------------------------------------------
   def loadFile(self):
     with open(self.filename, 'r') as f:
-      self.content = json.load(f)
+      contentEncrypted = f.read()
     f.closed
+
+    content = str(self.gpg.decrypt(contentEncrypted, passphrase='default' ))
+
+    self.content = json.loads(content)
 
   #---------------------------------------------
   # Store::saveFile
   #---------------------------------------------
   def saveFile(self):
+    content = json.dumps(self.content)
+    contentEcrypted = self.gpg.encrypt(content, recipients=None, symmetric=True, armor=True, passphrase='default')
+
     with open(self.filename, 'w') as f:
-      json.dump(self.content, f)
+      f.write(str(contentEcrypted))
     f.closed
 
 #---------------------------------------------
