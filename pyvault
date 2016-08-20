@@ -51,13 +51,22 @@ class Store(object):
 
     self.filename = filename
 
-    self.passphrase=getpass.getpass()
+    if sys.stdin.isatty():
+      self.passphrase=getpass.getpass(stream=sys.stderr)
+    else:
+      self.passphrase = sys.stdin.readline().rstrip()
 
     if not os.path.exists(self.filename):
       printMsg("Vault {0} does not exist, creating one.".format(self.filename))
       self.saveFile()
     else:
       self.loadFile()
+
+  #---------------------------------------------
+  # Store::init
+  #---------------------------------------------
+  def init(self):
+    pass
 
   #---------------------------------------------
   # Store::write
