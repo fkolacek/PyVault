@@ -1,0 +1,35 @@
+#!/bin/bash
+# Description: Utility for getting passwords easily
+# Author: fkolacek@redhat.com
+# Version: 0.1a
+
+PYVAULT=$(which pyvault)
+ZENITY=$(which zenity)
+DMENU=$(which dmenu)
+XCLIP=$(which xclip)
+
+[ -z "${ZENITY}" ] && { echo "Cannot find zenity in PATH, please install it first!"; exit 2; }
+[ -z "${PYVAULT}" ] && { echo "Cannot find pyvault in PATH, please install it first!"; exit 2; }
+[ -z "${DMENU}" ] && { echo "Cannot find dmenu in PATH, please install it first!"; exit 2; }
+[ -z "${XCLIP}" ] && { echo "Cannot find xclip in PATH, please install it first!"; exit 2; }
+
+pass=$($ZENITY --password --title="PyVault passphrase" 2>/dev/null)
+
+# Aborted
+[ $? -ne 0 ] && { exit 1; }
+
+out=$(echo "${pass}" | $PYVAULT dump)
+
+# PyVault failed
+[ $? -ne 0 ] && { $ZENITY --error --text="${out}"; exit 1; }
+
+outCount=$(echo "${out}" | wc -l)
+
+selected=$(echo "${out}" | awk '{print $1}' | nl -w 2 -s '. ' | dmenu -l $outCount | awk '{print $2}')
+
+# Not found
+[ -z "${selected}" ] && { exit 1; }
+
+echo "${out}" | grep "${selected}" | awk '{print $2}' | ${XCLIP} -selection clipboard
+
+exit 0
