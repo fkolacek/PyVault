@@ -1,14 +1,15 @@
-Name:   pyvault
-Version:  1.0
-Release:  1%{?dist}
-Summary:  Yet another implementation of Vault using pure Python (json and gnupg modules).
-Packager: Frantisek Kolacek <fkolacek@redhat.com>
-Group:    Security
-License:  GNU/GPL
-URL:    https://github.com/fkolacek/PyVault
-Source0:  pyvault-1.0.tgz
-
-Requires: python2-gnupg zenity xclip dmenu
+Name:         pyvault
+Version:      1.0
+Release:      1%{?dist}
+Summary:      Yet another implementation of Vault using pure Python (json and gnupg modules).
+Packager:     Frantisek Kolacek <fkolacek@redhat.com>
+Group:        Security
+License:      GNU/GPL
+URL:          https://github.com/fkolacek/PyVault
+Source0:      pyvault-1.0.tgzA
+Source0:      https://api.github.com/repos/fkolacek/PyVault/tarball/master#/pyvault.tar.gz
+BuildArch:    noarch
+Requires:     python2-gnupg zenity xclip dmenu
 
 %description
 Yet another implementation of Vault using pure Python (json and gnupg modules).
