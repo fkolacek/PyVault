@@ -1,5 +1,5 @@
 Name:         pyvault
-Version:      1.0
+Version:      1.1
 Release:      1%{?dist}
 Summary:      Yet another implementation of Vault using pure Python (json and gnupg modules).
 Packager:     Frantisek Kolacek <fkolacek@redhat.com>
@@ -39,5 +39,8 @@ install -m 0755 .bash_completion.d/pyvault %{buildroot}/etc/bash_completion.d/py
 /etc/bash_completion.d/pyvault
 
 %changelog
+* Sun Aug 21 2016 Frantisek Kolacek <fkolacek@redhat.com> 1.1-1
+- new package built with tito
+
 * Sun Aug 21 2016 Frantisek Kolacek <fkolacek@redhat.com> 1.0-1
 --First repack
