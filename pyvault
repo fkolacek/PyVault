@@ -51,28 +51,22 @@ class Store(object):
 
     self.filename = filename
 
-    if sys.stdin.isatty():
-      self.passphrase=getpass.getpass(stream=sys.stderr)
-    else:
-      self.passphrase = sys.stdin.readline().rstrip()
-
-    if not os.path.exists(self.filename):
-      printMsg("Vault {0} does not exist, creating one.".format(self.filename))
-      self.saveFile()
-    else:
-      self.loadFile()
-
   #---------------------------------------------
   # Store::init
   #---------------------------------------------
   def init(self):
-    pass
+    if not os.path.exists(self.filename):
+      printMsg("Vault {0} does not exist, creating one.".format(self.filename))
+      self.saveFile()
+    else:
+      printError("Vault {0} already exists!".format(self.filename), 2)
 
   #---------------------------------------------
   # Store::write
   #---------------------------------------------
   def write(self, key, val):
     self.checkKey(key)
+    self.loadFile()
 
     obj = self.content
     # Split parts and remove first one (blank one)
@@ -105,6 +99,7 @@ class Store(object):
   #---------------------------------------------
   def read(self, key):
     self.checkKey(key)
+    self.loadFile()
 
     obj = self.content
 
@@ -132,6 +127,7 @@ class Store(object):
   #---------------------------------------------
   def delete(self, key):
     self.checkKey(key)
+    self.loadFile()
 
     if key == '/':
       raise Exception("Entry / cannot be removed")
@@ -162,6 +158,7 @@ class Store(object):
   # Store::dump
   #---------------------------------------------
   def dump(self):
+    self.loadFile()
     self.dumpAll(self.content, [])
 
   def dumpAll(self, d, l):
@@ -172,6 +169,15 @@ class Store(object):
         del l[-1]
       else:
         print "/{0}/{1} {2}".format('/'.join(l), key, val).replace('//', '/')
+
+  #---------------------------------------------
+  # Store::getPassphrase
+  #---------------------------------------------
+  def getPassphrase(self):
+    if sys.stdin.isatty():
+      self.passphrase=getpass.getpass(stream=sys.stderr)
+    else:
+      self.passphrase = sys.stdin.readline().rstrip()
 
   #---------------------------------------------
   # Store::checkKey
@@ -187,6 +193,12 @@ class Store(object):
   # Store::loadFile
   #---------------------------------------------
   def loadFile(self):
+    if not os.path.exists(self.filename):
+      printError("Vault {0} does not exist, please run pyvault init first.".format(self.filename), 2)
+
+    if not self.passphrase:
+      self.getPassphrase()
+
     with open(self.filename, 'r') as f:
       contentEncrypted = f.read()
     f.closed
@@ -199,6 +211,9 @@ class Store(object):
   # Store::saveFile
   #---------------------------------------------
   def saveFile(self):
+    if not self.passphrase:
+      self.getPassphrase()
+
     content = json.dumps(self.content)
     contentEcrypted = self.gpg.encrypt(content, recipients=None, symmetric=True, armor=True, passphrase=self.passphrase)
 
@@ -213,7 +228,7 @@ class Vault(object):
 
   description = "pyvault - Custom vault (fkolacek@redhat.com)"
   store = None
-  vault = ".vaultdb"
+  vault = ".pyvaultdb"
 
   #---------------------------------------------
   # Vault::__init__
@@ -253,6 +268,7 @@ Available commands are:
     args = parser.parse_args(sys.argv[2:])
 
     self.store = Store(args.vault)
+    self.store.init()
 
   #---------------------------------------------
   # Vault::write

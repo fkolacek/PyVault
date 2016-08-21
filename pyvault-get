@@ -20,11 +20,12 @@ pass=$($ZENITY --password --title="PyVault passphrase" 2>/dev/null)
 
 out=$(echo "${pass}" | $PYVAULT dump)
 
+[ -z "${out}" ] && { out="Vault is empty!"; false; }
+
 # PyVault failed
 [ $? -ne 0 ] && { $ZENITY --error --text="${out}"; exit 1; }
 
 outCount=$(echo "${out}" | wc -l)
-
 selected=$(echo "${out}" | awk '{print $1}' | nl -w 2 -s '. ' | dmenu -l $outCount | awk '{print $2}')
 
 # Not found
