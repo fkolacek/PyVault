@@ -1,4 +1,4 @@
-Name:         PyVault
+Name:         PyVault-utils
 Version:      1.0
 Release:      1%{?dist}
 Summary:      Yet another implementation of Vault using pure Python (json and gnupg modules).
@@ -8,10 +8,10 @@ License:      GNU/GPL
 URL:          https://github.com/fkolacek/PyVault
 Source0:      https://github.com/fkolacek/PyVault/archive/PyVault-%{version}.tar.gz
 BuildArch:    noarch
-Requires:     python2-gnupg
+Requires:     PyVault zenity xclip dmenu bash-completion
 
 %description
-Yet another implementation of Vault using pure Python (json and gnupg modules).
+Bunch of utilities for making life with PyVault easier.
 
 %prep
 %setup -q -n PyVault-%{name}-%{version}
@@ -24,13 +24,14 @@ rm -rf %{buildroot}
 %install
 rm -rf %{buildroot}
 mkdir -p %{buildroot}/usr/local/bin
+mkdir -p %{buildroot}/etc/bash_completion.d/
 
-install -m 0755 pyvault %{buildroot}/usr/local/bin/pyvault
-#install pyvault.1 %{buildroot}/usr/local/share/man/man1/pyvault.1
+install -m 0755 pyvault-get %{buildroot}/usr/local/bin/pyvault-get
+install -m 0644 .bash_completion.d/pyvault %{buildroot}/etc/bash_completion.d/pyvault
 
 %files
-#%doc /usr/local/share/man/man1/pyvault.1
-/usr/local/bin/pyvault
+/usr/local/bin/pyvault-get
+/etc/bash_completion.d/pyvault
 
 %changelog
 * Sun Aug 21 2016 Frantisek Kolacek <fkolacek@redhat.com> 1.0-1
