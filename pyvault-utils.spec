@@ -14,7 +14,7 @@ Requires:     PyVault zenity xclip dmenu bash-completion
 Bunch of utilities for making life with PyVault easier.
 
 %prep
-%setup -q -n PyVault-%{name}-%{version}
+%setup -q -n PyVault-PyVault-%{version}
 
 %clean
 rm -rf %{buildroot}
