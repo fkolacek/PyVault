@@ -1,12 +1,15 @@
-Name:         pyvault
+#%global         commit          1be2d2afdcb0313831be3274a2388a551fb145a8
+#%global         githash         %(c=%{commit}; echo ${c:0:7})
+#Source:         https://github.com/tista500/%{name}/archive/%{commit}/%{name}-v%{version}-%{githash}.ta
+Name:         PyVault
 Version:      1.0
 Release:      1%{?dist}
 Summary:      Yet another implementation of Vault using pure Python (json and gnupg modules).
 Packager:     Frantisek Kolacek <fkolacek@redhat.com>
 Group:        Security
 License:      GNU/GPL
-URL:          https://github.com/fkolacek/PyVault
-Source0:      https://api.github.com/repos/fkolacek/PyVault/tarball/master#/pyvault.tar.gz
+URL:          https://github.com/fkolacek/%{name}
+Source0:      https://github.com/fkolacek/%{name}/archive/%{name}-%{version}.tar.gz
 BuildArch:    noarch
 Requires:     python2-gnupg zenity xclip dmenu
 
@@ -14,7 +17,7 @@ Requires:     python2-gnupg zenity xclip dmenu
 Yet another implementation of Vault using pure Python (json and gnupg modules).
 
 %prep
-%setup -q
+%setup -q -n PyVault-%{name}-%{version}
 
 %clean
 rm -rf %{buildroot}
