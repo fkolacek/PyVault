@@ -9,6 +9,7 @@ import os
 import argparse
 import json
 import getpass
+import cmd
 from pprint import pprint
 
 #---------------------------------------------
@@ -155,6 +156,15 @@ class Store(object):
     self.saveFile()
 
   #---------------------------------------------
+  # Store::shell
+  #---------------------------------------------
+  def shell(self):
+    self.loadFile()
+
+    printMsg("Vault {0} opened.".format(self.filename))
+
+
+  #---------------------------------------------
   # Store::dump
   #---------------------------------------------
   def dump(self):
@@ -245,6 +255,7 @@ Available commands are:
   read     Read specific entry
   write    Write specific entry
   delete   Delete specific entry
+  shell    Interactive shell
   dump     Dump all entries''')
 
     parser.add_argument("command", help="Subcommand to run")
@@ -306,6 +317,18 @@ Available commands are:
 
     self.store = Store(args.vault)
     self.store.delete(args.key[1])
+
+  #---------------------------------------------
+  # Vault::shell
+  #---------------------------------------------
+  def shell(self):
+    parser = cParser(description=self.description, add_help=False, usage="pyvault shell")
+    parser.add_argument("--vault", action="store", dest="vault", help="Specify the vault file (default .vault)", default=self.vault)
+
+    args = parser.parse_args(sys.argv[2:])
+
+    self.store = Store(args.vault)
+    self.store.shell()
 
   #---------------------------------------------
   # Vault::dump

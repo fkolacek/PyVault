@@ -1,6 +1,6 @@
 # Description: Autocomplete file for pyvault
 # Author: fkolacek@redhat.com
-# Version: 0.1a
+# Version: 1.0
 # Dependencies: /usr/share/bash-completion/bash_completion
 
 _pyvault()
@@ -12,11 +12,11 @@ _pyvault()
 
   case ${COMP_CWORD} in
   1)
-    COMPREPLY=($(compgen -W "init read write delete dump" ${cur}))
+    COMPREPLY=($(compgen -W "init read write delete shell dump" ${cur}))
     ;;
   2)
     case ${prev} in
-      init|dump)
+      init|shell|dump)
         COMPREPLY=($(compgen -W "--vault" -- ${cur}))
         ;;
       read|write|delete)
