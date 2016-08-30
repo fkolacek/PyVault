@@ -52,7 +52,10 @@ class cPrompt(cmd.Cmd):
       print '*** Invalid arguments'
       return
 
-    self.store.write(a[0], a[1])
+    try:
+      self.store.write(a[0], a[1])
+    except Exception, err:
+      print('*** {0}'.format(str(err)))
 
   def do_read(self, args):
     "Read specific entry (type read <key>)"
@@ -62,7 +65,10 @@ class cPrompt(cmd.Cmd):
       print '*** Invalid arguments'
       return
 
-    self.store.read(args)
+    try:
+      self.store.read(args)
+    except Exception, err:
+      print('*** {0}'.format(str(err)))
 
   def do_delete(self, args):
     "Delete specific entry (type delete <key>)"
@@ -72,7 +78,10 @@ class cPrompt(cmd.Cmd):
       print '*** Invalid arguments'
       return
 
-    self.store.delete(args)
+    try:
+      self.store.delete(args)
+    except Exception, err:
+      print('*** {0}'.format(str(err)))
 
   def do_quit(self, args):
     "Quit interactive shell"
