@@ -34,6 +34,69 @@ class cParser(argparse.ArgumentParser):
     exit(2)
 
 #---------------------------------------------
+# cPrompt
+#---------------------------------------------
+class cPrompt(cmd.Cmd):
+
+  prompt = '> '
+  store = None
+
+  def setStore(self, store):
+      self.store = store
+
+  def do_write(self, args):
+    "Write specific entry (type write <key> <val>)"
+    a = args.split()
+
+    if len(a) != 2:
+      print '*** Invalid arguments'
+      return
+
+    self.store.write(a[0], a[1])
+
+  def do_read(self, args):
+    "Read specific entry (type read <key>)"
+    a = args.split()
+
+    if len(a) != 1:
+      print '*** Invalid arguments'
+      return
+
+    self.store.read(args)
+
+  def do_delete(self, args):
+    "Delete specific entry (type delete <key>)"
+    a = args.split()
+
+    if len(a) != 1:
+      print '*** Invalid arguments'
+      return
+
+    self.store.delete(args)
+
+  def do_quit(self, args):
+    "Quit interactive shell"
+    return True
+
+  def do_EOF(self, line):
+    return True
+
+  def complete_write(self, text, line, begidx, endidx):
+    mline = line.partition(' ')[2]
+    offs = len(mline) - len(text)
+    return [s[offs:] for s in self.store.dumpKeys() if s.startswith(mline)]
+
+  def complete_read(self, text, line, begidx, endidx):
+    mline = line.partition(' ')[2]
+    offs = len(mline) - len(text)
+    return [s[offs:] for s in self.store.dumpKeys() if s.startswith(mline)]
+
+  def complete_delete(self, text, line, begidx, endidx):
+    mline = line.partition(' ')[2]
+    offs = len(mline) - len(text)
+    return [s[offs:] for s in self.store.dumpKeys() if s.startswith(mline)]
+
+#---------------------------------------------
 # Store
 #---------------------------------------------
 class Store(object):
@@ -156,15 +219,6 @@ class Store(object):
     self.saveFile()
 
   #---------------------------------------------
-  # Store::shell
-  #---------------------------------------------
-  def shell(self):
-    self.loadFile()
-
-    printMsg("Vault {0} opened.".format(self.filename))
-
-
-  #---------------------------------------------
   # Store::dump
   #---------------------------------------------
   def dump(self):
@@ -179,6 +233,25 @@ class Store(object):
         del l[-1]
       else:
         print "/{0}/{1} {2}".format('/'.join(l), key, val).replace('//', '/')
+
+
+  #---------------------------------------------
+  # Store::dumpKeys
+  #---------------------------------------------
+  def dumpKeys(self):
+    self.loadFile()
+    return self.dumpAllKeys(self.content, [], [])
+
+  def dumpAllKeys(self, d, l, r):
+    for key, val in d.iteritems():
+      if isinstance(val, dict):
+        l.append(key)
+        self.dumpAllKeys(val, l, r)
+        del l[-1]
+      else:
+        r.append("/{0}/{1}".format('/'.join(l), key).replace('//', '/'))
+
+    return r
 
   #---------------------------------------------
   # Store::getPassphrase
@@ -328,7 +401,12 @@ Available commands are:
     args = parser.parse_args(sys.argv[2:])
 
     self.store = Store(args.vault)
-    self.store.shell()
+    self.store.loadFile()
+
+    printMsg("Vault {0} opened.".format(args.vault))
+    prompt = cPrompt()
+    prompt.setStore(self.store)
+    prompt.cmdloop()
 
   #---------------------------------------------
   # Vault::dump
