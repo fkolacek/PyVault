@@ -1,5 +1,5 @@
 Name:         PyVault
-Version:      1.0
+Version:      1.1
 Release:      1%{?dist}
 Summary:      Yet another implementation of Vault using pure Python (json and gnupg modules).
 Packager:     Frantisek Kolacek <fkolacek@redhat.com>
@@ -33,5 +33,7 @@ install -m 0755 pyvault %{buildroot}/usr/local/bin/pyvault
 /usr/local/bin/pyvault
 
 %changelog
+* Tue Aug 30 2016 Frantisek Kolacek <fkolacek@redhat.com> 1.1-1
+--Added support for interactive shell
 * Sun Aug 21 2016 Frantisek Kolacek <fkolacek@redhat.com> 1.0-1
 --First repack
