@@ -2,6 +2,15 @@
 
 Yet another implementation of Vault using pure Python (json and gnupg modules). This has nothing to do with Vault provided by Hashicorp. This is also not supposed nor recommended to use in any production environment.
 
+## Installation
+
+The easiest way is to use [this](https://copr.fedorainfracloud.org/coprs/fkolacek/PyVault/) COPR repository and then just use dnf:
+
+~~~
+# dnf copr enable fkolacek/PyVault
+# dnf install PyVault Pyvault-utils
+~~~
+
 ## Usage:
 
 First of all you should initialize your vault using:
@@ -34,7 +43,8 @@ $ pyvault read / | jq
 ~~~
 
 ## TODO
- - Implement data encryption (planning to use gnupg module and symmetric encryption
+ - Implement interactive shell
+ - Create GUI client
 
 ## Features
  - Bash autocompletion for commands
@@ -122,6 +132,9 @@ password1
 0 ✓ 0s ~$ pyvault write /servers/nas.home.example.com password9
 [!] Entry /servers/nas.home.example.com already exists, delete it first
 ```
+## License
+
+Released under GNU / GPL, for more info see LICENSE file.
 
 ## Author
 
