@@ -2,7 +2,7 @@
 # -*- coding: utf-8 -*-
 # Description: Yet another implementation of Vault using pure Python (json and gnupg modules)
 # Author: fkolacek@redhat.com
-# Version: 1.1
+# Version: 1.2
 
 import sys
 import os

@@ -1,5 +1,5 @@
 Name:         PyVault
-Version:      1.1
+Version:      1.2
 Release:      1%{?dist}
 Summary:      Yet another implementation of Vault using pure Python (json and gnupg modules).
 Packager:     Frantisek Kolacek <fkolacek@redhat.com>
