@@ -26,11 +26,16 @@ out=$(echo "${pass}" | $PYVAULT dump)
 [ -z "${out}" ] && { $ZENITY --error --text="Vault is empty!"; exit 1; }
 
 outCount=$(echo "${out}" | wc -l)
+
+if [ $outCount -gt 20 ]; then
+  outCount=20
+fi
+
 selected=$(echo "${out}" | awk '{print $1}' | nl -w 2 -s '. ' | dmenu -l $outCount | awk '{print $2}')
 
 # Not found
 [ -z "${selected}" ] && { exit 1; }
 
-echo "${out}" | grep "${selected}" | awk '{print $2}' | ${XCLIP} -selection clipboard
+echo "${out}" | grep "${selected} " | awk '{sub($1 FS,"" );print}' | ${XCLIP} -selection clipboard
 
 exit 0
