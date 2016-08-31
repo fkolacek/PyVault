@@ -42,8 +42,20 @@ or using read:
 $ pyvault read / | jq
 ~~~
 
+Current version also provides possibility to use interactive shell
+~~~
+$ pyvault shell
+Password:
+[*] Vault test opened.
+> write /group1/user1 pass1
+> write /group1/user2 pass2
+> write /group2/user3 pass3
+> read /group1/user1
+pass1
+> quit
+~~~
+
 ## TODO
- - Implement interactive shell
  - Create GUI client
 
 ## Features
