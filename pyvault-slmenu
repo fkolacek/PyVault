@@ -1,0 +1,39 @@
+#!/bin/bash
+# Description: Utility for getting passwords easily in CLI
+# Author: fkolacek@redhat.com, mmoucka@redhat.com
+# Version: 1.0
+
+PYVAULT=$(which pyvault)
+SLMENU=$(which slmenu)
+XCLIP=$(which xclip)
+
+[ -z "${PYVAULT}" ] && { echo "Cannot find pyvault in PATH, please install it first!"; exit 2; }
+[ -z "${SLMENU}" ] && { echo "Cannot find slmenu in PATH, please install it first!"; exit 2; }
+[ -z "${XCLIP}" ] && { echo "Cannot find xclip in PATH, please install it first!"; exit 2; }
+
+read -s -p "Enter Password: " pass
+echo ""
+# Aborted
+[ $? -ne 0 ] && { exit 1; }
+
+out=$(echo "${pass}" | $PYVAULT dump)
+
+# PyVault failed
+[ $? -ne 0 ] && { echo "${out}"; exit 1; }
+# Vault is empty
+[ -z "${out}" ] && { echo "Vault is empty!"; exit 1; }
+
+outCount=$(echo "${out}" | wc -l)
+
+if [ $outCount -gt 20 ]; then
+  outCount=20
+fi
+
+selected=$(echo "${out}" | awk '{print $1}' | nl -w 2 -s '. ' | $SLMENU -l $outCount | awk '{print $2}')
+
+# Not found
+[ -z "${selected}" ] && { clear; exit 1; }
+
+echo "${out}" | grep "${selected} " | awk '{sub($1 FS,"" );print}' | ${XCLIP} -selection clipboard
+clear
+exit 0
