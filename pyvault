@@ -12,6 +12,7 @@ import getpass
 import cmd
 from six import string_types
 
+
 # print_msg
 def print_msg(error_message):
     print("[*] {0}".format(error_message))
@@ -78,27 +79,28 @@ class CPrompt(cmd.Cmd):
         except Exception as e:
             print('*** {0}'.format(str(e)))
 
-    def do_quit(self, _):
+    @staticmethod
+    def do_quit(_):
         """Quit interactive shell"""
         return True
 
-    def do_EOF(self, _):
+    @staticmethod
+    def do_EOF(_):
         return True
 
     def complete_write(self, text, line):
-        mline = line.partition(' ')[2]
-        offs = len(mline) - len(text)
-        return [s[offs:] for s in self.store.dump_keys() if s.startswith(mline)]
+        self.complete(text, line)
 
     def complete_read(self, text, line):
-        mline = line.partition(' ')[2]
-        offs = len(mline) - len(text)
-        return [s[offs:] for s in self.store.dump_keys() if s.startswith(mline)]
+        self.complete(text, line)
 
     def complete_delete(self, text, line):
-        mline = line.partition(' ')[2]
-        offs = len(mline) - len(text)
-        return [s[offs:] for s in self.store.dump_keys() if s.startswith(mline)]
+        self.complete(text, line)
+
+    def complete(self, text, line):
+        columns = line.partition(' ')
+        offs = len(columns[2]) - len(text)
+        return [s[offs:] for s in self.store.dump_keys() if s.startswith(columns[2])]
 
 
 # Store
@@ -220,14 +222,14 @@ class Store(object):
         self.dump_all(self.content, [])
 
     # Store::dump_all
-    def dump_all(self, d, l):
-        for key, val in d.items():
+    def dump_all(self, root, leaf):
+        for key, val in root.items():
             if isinstance(val, dict):
-                l.append(key)
-                self.dump_all(val, l)
-                del l[-1]
+                leaf.append(key)
+                self.dump_all(val, leaf)
+                del leaf[-1]
             else:
-                print("/{0}/{1} {2}".format('/'.join(l), key, val).replace('//', '/'))
+                print("/{0}/{1} {2}".format('/'.join(leaf), key, val).replace('//', '/'))
 
     # Store::dump_keys
     def dump_keys(self):
@@ -235,14 +237,14 @@ class Store(object):
         return self.dump_all_keys(self.content, [], [])
 
     # Store::dump_all_keys
-    def dump_all_keys(self, d, l, r):
-        for key, val in d.items():
+    def dump_all_keys(self, root, leaf, r):
+        for key, val in root.items():
             if isinstance(val, dict):
-                l.append(key)
-                self.dump_all_keys(val, l, r)
-                del l[-1]
+                leaf.append(key)
+                self.dump_all_keys(val, leaf, r)
+                del leaf[-1]
             else:
-                r.append("/{0}/{1}".format('/'.join(l), key).replace('//', '/'))
+                r.append("/{0}/{1}".format('/'.join(leaf), key).replace('//', '/'))
 
         return r
 
@@ -254,7 +256,8 @@ class Store(object):
             self.passphrase = sys.stdin.readline().rstrip()
 
     # Store::check_key
-    def check_key(self, key):
+    @staticmethod
+    def check_key(key):
         if not key.startswith('/'):
             raise Exception('Entry name must start with /')
 
@@ -275,7 +278,10 @@ class Store(object):
             content = str(self.gpg.decrypt(content_encrypted,
                                            passphrase=self.passphrase))
 
-            self.content = json.loads(content)
+            try:
+                self.content = json.loads(content)
+            except json.decoder.JSONDecodeError as e:
+                raise Exception("Cannot load the content of the vault, most probably wrong password")
 
     # Store::save_file
     def save_file(self):
@@ -445,6 +451,7 @@ if __name__ == '__main__':
 
         Vault()
     except ImportError:
-        print_error("Required module 'gnupg' not found. Please install it by running 'pip install python-gnupg' as root.", 1)
+        print_error("Required module 'gnupg' not found. Please install it by running 'pip install python-gnupg' as "
+                    "root.", 1)
     except Exception as err:
         print_error('{0}'.format(str(err)), 2)
