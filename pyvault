@@ -2,7 +2,7 @@
 # -*- coding: utf-8 -*-
 # Description: Yet another implementation of Vault using pure Python (json and gnupg modules)
 # Author: fkolacek@redhat.com
-# Version: 1.2
+# Version: 1.3
 
 import sys
 import os
@@ -10,328 +10,304 @@ import argparse
 import json
 import getpass
 import cmd
-from pprint import pprint
+from six import string_types
 
-#---------------------------------------------
-# printMsg
-#---------------------------------------------
-def printMsg(errorMessage):
-  print("[*] {0}".format(errorMessage))
+# print_msg
+def print_msg(error_message):
+    print("[*] {0}".format(error_message))
 
-#---------------------------------------------
-# printError
-#---------------------------------------------
-def printError(errorMessage, errorCode):
-  print("[!] {0}".format(errorMessage))
-  exit(errorCode)
 
-#---------------------------------------------
-# cParser
-#---------------------------------------------
-class cParser(argparse.ArgumentParser):
-  def error(self, message):
-    self.print_help()
-    exit(2)
+# print_error
+def print_error(error_message, error_code):
+    print("[!] {0}".format(error_message))
+    exit(error_code)
 
-#---------------------------------------------
-# cPrompt
-#---------------------------------------------
-class cPrompt(cmd.Cmd):
 
-  prompt = '> '
-  store = None
-
-  def setStore(self, store):
-      self.store = store
-
-  def do_write(self, args):
-    "Write specific entry (type write <key> <val>)"
-    a = args.split()
-
-    if len(a) != 2:
-      print('*** Invalid arguments')
-      return
-
-    try:
-      self.store.write(a[0], a[1])
-    except Exception as err:
-      print('*** {0}'.format(str(err)))
-
-  def do_read(self, args):
-    "Read specific entry (type read <key>)"
-    a = args.split()
-
-    if len(a) != 1:
-      print('*** Invalid arguments')
-      return
-
-    try:
-      self.store.read(args)
-    except Exception as err:
-      print('*** {0}'.format(str(err)))
-
-  def do_delete(self, args):
-    "Delete specific entry (type delete <key>)"
-    a = args.split()
-
-    if len(a) != 1:
-      print('*** Invalid arguments')
-      return
-
-    try:
-      self.store.delete(args)
-    except Exception as err:
-      print('*** {0}'.format(str(err)))
-
-  def do_quit(self, args):
-    "Quit interactive shell"
-    return True
-
-  def do_EOF(self, line):
-    return True
-
-  def complete_write(self, text, line, begidx, endidx):
-    mline = line.partition(' ')[2]
-    offs = len(mline) - len(text)
-    return [s[offs:] for s in self.store.dumpKeys() if s.startswith(mline)]
-
-  def complete_read(self, text, line, begidx, endidx):
-    mline = line.partition(' ')[2]
-    offs = len(mline) - len(text)
-    return [s[offs:] for s in self.store.dumpKeys() if s.startswith(mline)]
-
-  def complete_delete(self, text, line, begidx, endidx):
-    mline = line.partition(' ')[2]
-    offs = len(mline) - len(text)
-    return [s[offs:] for s in self.store.dumpKeys() if s.startswith(mline)]
-
-#---------------------------------------------
-# Store
-#---------------------------------------------
-class Store(object):
-
-  gpg = None
-  filename = None
-  passphrase = None
-  content = {}
-
-  #---------------------------------------------
-  # Store::__init__
-  #---------------------------------------------
-  def __init__(self, filename):
-    self.gpg = gnupg.GPG()
-    self.gpg.charset = "utf-8"
-
-    self.filename = filename
-
-  #---------------------------------------------
-  # Store::init
-  #---------------------------------------------
-  def init(self):
-    if not os.path.exists(self.filename):
-      printMsg("Vault {0} does not exist, creating one.".format(self.filename))
-      self.saveFile()
-    else:
-      printError("Vault {0} already exists!".format(self.filename), 2)
-
-  #---------------------------------------------
-  # Store::write
-  #---------------------------------------------
-  def write(self, key, val):
-    self.checkKey(key)
-    self.loadFile()
-
-    obj = self.content
-    # Split parts and remove first one (blank one)
-    indexes = key.split('/')[1:]
-    indexes_done = []
-
-    for index in indexes[:-1]:
-      indexes_done.append(index)
-
-      if not isinstance(obj, dict):
-        raise Exception("Entry /{0} already exists, delete it first".format('/'.join(indexes_done)).replace('//', '/'))
-
-      if not index in obj:
-        obj[index] = {}
-
-      obj = obj[index]
-
-    if not isinstance(obj, dict):
-      raise Exception("Entry /{0} already exists, delete it first".format(key).replace('//', '/'))
-
-    if indexes[-1] in obj and isinstance(obj[indexes[-1]], dict) and len(obj[indexes[-1]]) > 0:
-      raise Exception("Entry /{0} already exists, delete it first".format(key).replace('//', '/'))
-
-    obj[indexes[-1]] = val
-
-    self.saveFile()
-
-  #---------------------------------------------
-  # Store::read
-  #---------------------------------------------
-  def read(self, key):
-    self.checkKey(key)
-    self.loadFile()
-
-    obj = self.content
-
-    if key == '/':
-      print(json.dumps(obj))
-    else:
-      indexes = key.split('/')[1:]
-
-      for index in indexes[:-1]:
-        if index not in obj:
-          exit(2)
-
-        obj = obj[index]
-
-      if indexes[-1] not in obj:
+# CParser
+class CParser(argparse.ArgumentParser):
+    def error(self, message):
+        self.print_help()
         exit(2)
 
-      if isinstance(obj[indexes[-1]], basestring):
-        print(obj[indexes[-1]])
-      else:
-        print(json.dumps(obj[indexes[-1]]))
 
-  #---------------------------------------------
-  # Store::delete
-  #---------------------------------------------
-  def delete(self, key):
-    self.checkKey(key)
-    self.loadFile()
+# CPrompt
+class CPrompt(cmd.Cmd):
 
-    if key == '/':
-      raise Exception("Entry / cannot be removed")
+    prompt = '> '
+    store = None
 
-    obj = self.content
-    # Split parts and remove first one (blank one)
-    indexes = key.split('/')[1:]
-    indexes_done = []
-    for index in indexes[:-1]:
+    def setStore(self, store):
+        self.store = store
 
-      if index not in obj:
-        raise Exception("Entry /{0}/{1} does not exist!".format('/'.join(indexes_done), index).replace('//', '/'))
+    def do_write(self, args):
+        """Write specific entry (type write <key> <val>)"""
+        a = args.split()
 
-      obj = obj[index]
-      indexes_done.append(index)
+        if len(a) != 2:
+            print('*** Invalid arguments')
+            return
 
-    if indexes[-1] not in obj:
-      raise Exception("Entry /{0}/{1} does not exist!".format('/'.join(indexes_done), indexes[-1]).replace('//', '/'))
+        try:
+            self.store.write(a[0], a[1])
+        except Exception as e:
+            print('*** {0}'.format(str(e)))
 
-    if isinstance(obj[indexes[-1]], dict) and len(obj[indexes[-1]]) > 0:
-      raise Exception("Entry /{0}/{1} still contains some entries, delete them first!".format('/'.join(indexes_done), indexes[-1]).replace('//', '/'))
+    def do_read(self, args):
+        """Read specific entry (type read <key>)"""
+        a = args.split()
 
-    del obj[indexes[-1]]
+        if len(a) != 1:
+            print('*** Invalid arguments')
+            return
 
-    self.saveFile()
+        try:
+            self.store.read(args)
+        except Exception as e:
+            print('*** {0}'.format(str(e)))
 
-  #---------------------------------------------
-  # Store::dump
-  #---------------------------------------------
-  def dump(self):
-    self.loadFile()
-    self.dumpAll(self.content, [])
+    def do_delete(self, args):
+        """Delete specific entry (type delete <key>)"""
+        a = args.split()
 
-  def dumpAll(self, d, l):
-    for key, val in d.items():
-      if isinstance(val, dict):
-        l.append(key)
-        self.dumpAll(val, l)
-        del l[-1]
-      else:
-        print("/{0}/{1} {2}".format('/'.join(l), key, val).replace('//', '/'))
+        if len(a) != 1:
+            print('*** Invalid arguments')
+            return
+
+        try:
+            self.store.delete(args)
+        except Exception as e:
+            print('*** {0}'.format(str(e)))
+
+    def do_quit(self, _):
+        """Quit interactive shell"""
+        return True
+
+    def do_EOF(self, _):
+        return True
+
+    def complete_write(self, text, line):
+        mline = line.partition(' ')[2]
+        offs = len(mline) - len(text)
+        return [s[offs:] for s in self.store.dump_keys() if s.startswith(mline)]
+
+    def complete_read(self, text, line):
+        mline = line.partition(' ')[2]
+        offs = len(mline) - len(text)
+        return [s[offs:] for s in self.store.dump_keys() if s.startswith(mline)]
+
+    def complete_delete(self, text, line):
+        mline = line.partition(' ')[2]
+        offs = len(mline) - len(text)
+        return [s[offs:] for s in self.store.dump_keys() if s.startswith(mline)]
 
 
-  #---------------------------------------------
-  # Store::dumpKeys
-  #---------------------------------------------
-  def dumpKeys(self):
-    self.loadFile()
-    return self.dumpAllKeys(self.content, [], [])
+# Store
+class Store(object):
 
-  def dumpAllKeys(self, d, l, r):
-    for key, val in d.items():
-      if isinstance(val, dict):
-        l.append(key)
-        self.dumpAllKeys(val, l, r)
-        del l[-1]
-      else:
-        r.append("/{0}/{1}".format('/'.join(l), key).replace('//', '/'))
+    gpg = None
+    filename = None
+    passphrase = None
+    content = {}
 
-    return r
+    # Store::__init__
+    def __init__(self, filename):
+        self.gpg = gnupg.GPG()
+        self.gpg.charset = "utf-8"
 
-  #---------------------------------------------
-  # Store::getPassphrase
-  #---------------------------------------------
-  def getPassphrase(self):
-    if sys.stdin.isatty():
-      self.passphrase=getpass.getpass(stream=sys.stderr)
-    else:
-      self.passphrase = sys.stdin.readline().rstrip()
+        self.filename = filename
 
-  #---------------------------------------------
-  # Store::checkKey
-  #---------------------------------------------
-  def checkKey(self, key):
-    if not key.startswith('/'):
-      raise Exception('Entry name must start with /')
+    # Store::init
+    def init(self):
+        if not os.path.exists(self.filename):
+            print_msg("Vault {0} does not exist, creating one.".format(self.filename))
+            self.save_file()
+        else:
+            print_error("Vault {0} already exists!".format(self.filename), 2)
 
-    if key.endswith('/') and key != '/':
-      raise Exception('Entry name must not end with /')
+    # Store::write
+    def write(self, key, val):
+        self.check_key(key)
+        self.load_file()
 
-  #---------------------------------------------
-  # Store::loadFile
-  #---------------------------------------------
-  def loadFile(self):
-    if not os.path.exists(self.filename):
-      printError("Vault {0} does not exist, please run pyvault init first.".format(self.filename), 2)
+        obj = self.content
+        # Split parts and remove first one (blank one)
+        indexes = key.split('/')[1:]
+        indexes_done = []
 
-    if not self.passphrase:
-      self.getPassphrase()
+        for index in indexes[:-1]:
+            indexes_done.append(index)
 
-    with open(self.filename, 'r') as f:
-      contentEncrypted = f.read()
-    f.closed
+            if not isinstance(obj, dict):
+                raise Exception("Entry /{0} already exists, delete it first".format(
+                    '/'.join(indexes_done)).replace('//', '/'))
 
-    content = str(self.gpg.decrypt(contentEncrypted, passphrase=self.passphrase))
+            if index not in obj:
+                obj[index] = {}
 
-    self.content = json.loads(content)
+            obj = obj[index]
 
-  #---------------------------------------------
-  # Store::saveFile
-  #---------------------------------------------
-  def saveFile(self):
-    if not self.passphrase:
-      self.getPassphrase()
+        if not isinstance(obj, dict):
+            raise Exception("Entry /{0} already exists, delete it first".format(key).replace('//', '/'))
 
-    content = json.dumps(self.content)
-    contentEcrypted = self.gpg.encrypt(content, recipients=None, symmetric=True, armor=True, passphrase=self.passphrase)
+        if indexes[-1] in obj and isinstance(obj[indexes[-1]], dict) and len(obj[indexes[-1]]) > 0:
+            raise Exception("Entry /{0} already exists, delete it first".format(key).replace('//', '/'))
 
-    with open(self.filename, 'w') as f:
-      f.write(str(contentEcrypted))
-    f.closed
+        obj[indexes[-1]] = val
 
-#---------------------------------------------
+        self.save_file()
+
+    # Store::read
+    def read(self, key):
+        self.check_key(key)
+        self.load_file()
+
+        obj = self.content
+
+        if key == '/':
+            print(json.dumps(obj))
+        else:
+            indexes = key.split('/')[1:]
+
+            for index in indexes[:-1]:
+                if index not in obj:
+                    exit(2)
+
+                obj = obj[index]
+
+            if indexes[-1] not in obj:
+                exit(2)
+
+            if isinstance(obj[indexes[-1]], string_types):
+                print(obj[indexes[-1]])
+            else:
+                print(json.dumps(obj[indexes[-1]]))
+
+    # Store::delete
+    def delete(self, key):
+        self.check_key(key)
+        self.load_file()
+
+        if key == '/':
+            raise Exception("Entry / cannot be removed")
+
+        obj = self.content
+        # Split parts and remove first one (blank one)
+        indexes = key.split('/')[1:]
+        indexes_done = []
+        for index in indexes[:-1]:
+            if index not in obj:
+                raise Exception("Entry /{0}/{1} does not exist!".format(
+                    '/'.join(indexes_done), index).replace('//', '/'))
+
+            obj = obj[index]
+            indexes_done.append(index)
+
+        if indexes[-1] not in obj:
+            raise Exception("Entry /{0}/{1} does not exist!".format(
+                '/'.join(indexes_done), indexes[-1]).replace('//', '/'))
+
+        if isinstance(obj[indexes[-1]], dict) and len(obj[indexes[-1]]) > 0:
+            raise Exception("Entry /{0}/{1} still contains some entries, delete them first!".format(
+                '/'.join(indexes_done), indexes[-1]).replace('//', '/'))
+
+        del obj[indexes[-1]]
+
+        self.save_file()
+
+    # Store::dump
+    def dump(self):
+        self.load_file()
+        self.dump_all(self.content, [])
+
+    # Store::dump_all
+    def dump_all(self, d, l):
+        for key, val in d.items():
+            if isinstance(val, dict):
+                l.append(key)
+                self.dump_all(val, l)
+                del l[-1]
+            else:
+                print("/{0}/{1} {2}".format('/'.join(l), key, val).replace('//', '/'))
+
+    # Store::dump_keys
+    def dump_keys(self):
+        self.load_file()
+        return self.dump_all_keys(self.content, [], [])
+
+    # Store::dump_all_keys
+    def dump_all_keys(self, d, l, r):
+        for key, val in d.items():
+            if isinstance(val, dict):
+                l.append(key)
+                self.dump_all_keys(val, l, r)
+                del l[-1]
+            else:
+                r.append("/{0}/{1}".format('/'.join(l), key).replace('//', '/'))
+
+        return r
+
+    # Store::get_passphrase
+    def get_passphrase(self):
+        if sys.stdin.isatty():
+            self.passphrase = getpass.getpass(stream=sys.stderr)
+        else:
+            self.passphrase = sys.stdin.readline().rstrip()
+
+    # Store::check_key
+    def check_key(self, key):
+        if not key.startswith('/'):
+            raise Exception('Entry name must start with /')
+
+        if key.endswith('/') and key != '/':
+            raise Exception('Entry name must not end with /')
+
+    # Store::load_file
+    def load_file(self):
+        if not os.path.exists(self.filename):
+            print_error("Vault {0} does not exist, please run pyvault init first.".format(self.filename), 2)
+
+        if not self.passphrase:
+            self.get_passphrase()
+
+        with open(self.filename, 'r') as f:
+            content_encrypted = f.read()
+
+            content = str(self.gpg.decrypt(content_encrypted,
+                                           passphrase=self.passphrase))
+
+            self.content = json.loads(content)
+
+    # Store::save_file
+    def save_file(self):
+        if not self.passphrase:
+            self.get_passphrase()
+
+        content = json.dumps(self.content)
+        content_encrypted = self.gpg.encrypt(content,
+                                             recipients=None,
+                                             symmetric=True,
+                                             armor=True,
+                                             passphrase=self.passphrase)
+
+        with open(self.filename, 'w') as f:
+            f.write(str(content_encrypted))
+
+
 # Vault
-#---------------------------------------------
 class Vault(object):
 
-  description = "pyvault - Custom vault (fkolacek@redhat.com)"
-  store = None
-  vault = ".pyvaultdb"
+    description = "pyvault - Custom vault (fkolacek@redhat.com)"
+    store = None
+    vault = ".pyvaultdb"
 
-  #---------------------------------------------
-  # Vault::__init__
-  #---------------------------------------------
-  def __init__(self):
-    if 'VAULT' in os.environ:
-      self.vault = os.environ.get('VAULT')
+    # Vault::__init__
+    def __init__(self):
+        if 'VAULT' in os.environ:
+            self.vault = os.environ.get('VAULT')
 
-    parser = cParser(
-      description=self.description, add_help=False, usage='''pyvault <command>
-
+        parser = CParser(description=self.description,
+                         add_help=False,
+                         usage='''pyvault <command>
 Available commands are:
   init     Initialize specified vault
   read     Read specific entry
@@ -340,106 +316,135 @@ Available commands are:
   shell    Interactive shell
   dump     Dump all entries''')
 
-    parser.add_argument("command", help="Subcommand to run")
+        parser.add_argument("command", help="Subcommand to run")
 
-    args = parser.parse_args(sys.argv[1:2])
+        args = parser.parse_args(sys.argv[1:2])
 
-    # If subcommand is not defined
-    if not hasattr(self, args.command):
-      parser.print_help()
-      exit(1)
+        # If subcommand is not defined
+        if not hasattr(self, args.command):
+            parser.print_help()
+            exit(1)
 
-    getattr(self, args.command)()
+        getattr(self, args.command)()
 
-  #---------------------------------------------
-  # Vault::init
-  #---------------------------------------------
-  def init(self):
-    parser = cParser(description=self.description, add_help=False, usage="pyvault init")
-    parser.add_argument("--vault", action="store", dest="vault", help="Specify the vault file (default .vault)", default=self.vault)
+    # Vault::init
+    def init(self):
+        parser = CParser(description=self.description,
+                         add_help=False,
+                         usage="pyvault init")
+        parser.add_argument("--vault",
+                            action="store",
+                            dest="vault",
+                            help="Specify the vault file (default .vault)",
+                            default=self.vault)
 
-    args = parser.parse_args(sys.argv[2:])
+        args = parser.parse_args(sys.argv[2:])
 
-    self.store = Store(args.vault)
-    self.store.init()
+        self.store = Store(args.vault)
+        self.store.init()
 
-  #---------------------------------------------
-  # Vault::write
-  #---------------------------------------------
-  def write(self):
-    parser = cParser(description=self.description, add_help=False, usage="pyvault write <key> <value>")
-    parser.add_argument("--vault", action="store", dest="vault", help="Specify the vault file (default .vault)", default=self.vault)
-    parser.add_argument("key", nargs=2, help="Entry key")
-    parser.add_argument("value", nargs=1, help="Entry value")
-    args = parser.parse_args()
+    # Vault::write
+    def write(self):
+        parser = CParser(description=self.description,
+                         add_help=False,
+                         usage="pyvault write <key> <value>")
+        parser.add_argument("--vault",
+                            action="store",
+                            dest="vault",
+                            help="Specify the vault file (default .vault)",
+                            default=self.vault)
+        parser.add_argument("key",
+                            nargs=2,
+                            help="Entry key")
+        parser.add_argument("value",
+                            nargs=1,
+                            help="Entry value")
+        args = parser.parse_args()
 
-    self.store = Store(args.vault)
-    self.store.write(args.key[1], args.value[0])
+        self.store = Store(args.vault)
+        self.store.write(args.key[1], args.value[0])
 
-  #---------------------------------------------
-  # Vault::read
-  #---------------------------------------------
-  def read(self):
-    parser = cParser(description=self.description, add_help=False, usage="pyvault read  <key>")
-    parser.add_argument("--vault", action="store", dest="vault", help="Specify the vault file (default .vault)", default=self.vault)
-    parser.add_argument("key", nargs=2, help="Entry key")
-    args = parser.parse_args()
+    # Vault::read
+    def read(self):
+        parser = CParser(description=self.description,
+                         add_help=False,
+                         usage="pyvault read  <key>")
+        parser.add_argument("--vault",
+                            action="store",
+                            dest="vault",
+                            help="Specify the vault file (default .vault)",
+                            default=self.vault)
+        parser.add_argument("key",
+                            nargs=2,
+                            help="Entry key")
+        args = parser.parse_args()
 
-    self.store = Store(args.vault)
-    self.store.read(args.key[1])
+        self.store = Store(args.vault)
+        self.store.read(args.key[1])
 
-  #---------------------------------------------
-  # Vault::delete
-  #---------------------------------------------
-  def delete(self):
-    parser = cParser(description=self.description, add_help=False, usage="pyvault delete <key>")
-    parser.add_argument("--vault", action="store", dest="vault", help="Specify the vault file (default .vault)", default=self.vault)
-    parser.add_argument("key", nargs=2, help="Entry key")
-    args = parser.parse_args()
+    # Vault::delete
+    def delete(self):
+        parser = CParser(description=self.description,
+                         add_help=False,
+                         usage="pyvault delete <key>")
+        parser.add_argument("--vault",
+                            action="store",
+                            dest="vault",
+                            help="Specify the vault file (default .vault)",
+                            default=self.vault)
+        parser.add_argument("key",
+                            nargs=2,
+                            help="Entry key")
+        args = parser.parse_args()
 
-    self.store = Store(args.vault)
-    self.store.delete(args.key[1])
+        self.store = Store(args.vault)
+        self.store.delete(args.key[1])
 
-  #---------------------------------------------
-  # Vault::shell
-  #---------------------------------------------
-  def shell(self):
-    parser = cParser(description=self.description, add_help=False, usage="pyvault shell")
-    parser.add_argument("--vault", action="store", dest="vault", help="Specify the vault file (default .vault)", default=self.vault)
+    # Vault::shell
+    def shell(self):
+        parser = CParser(description=self.description,
+                         add_help=False,
+                         usage="pyvault shell")
+        parser.add_argument("--vault",
+                            action="store",
+                            dest="vault",
+                            help="Specify the vault file (default .vault)",
+                            default=self.vault)
 
-    args = parser.parse_args(sys.argv[2:])
+        args = parser.parse_args(sys.argv[2:])
 
-    self.store = Store(args.vault)
-    self.store.loadFile()
+        self.store = Store(args.vault)
+        self.store.load_file()
 
-    printMsg("Vault {0} opened.".format(args.vault))
-    prompt = cPrompt()
-    prompt.setStore(self.store)
-    prompt.cmdloop()
+        print_msg("Vault {0} opened.".format(args.vault))
+        prompt = CPrompt()
+        prompt.setStore(self.store)
+        prompt.cmdloop()
 
-  #---------------------------------------------
-  # Vault::dump
-  #---------------------------------------------
-  def dump(self):
-    parser = cParser(description=self.description, add_help=False, usage="pyvault dump")
-    parser.add_argument("--vault", action="store", dest="vault", help="Specify the vault file (default .vault)", default=self.vault)
+    # Vault::dump
+    def dump(self):
+        parser = CParser(description=self.description,
+                         add_help=False,
+                         usage="pyvault dump")
+        parser.add_argument("--vault",
+                            action="store",
+                            dest="vault",
+                            help="Specify the vault file (default .vault)",
+                            default=self.vault)
 
-    args = parser.parse_args(sys.argv[2:])
+        args = parser.parse_args(sys.argv[2:])
 
-    self.store = Store(args.vault)
-    self.store.dump()
+        self.store = Store(args.vault)
+        self.store.dump()
 
-#---------------------------------------------
+
 # Main
-#---------------------------------------------
 if __name__ == '__main__':
+    try:
+        import gnupg
 
-  try:
-    import gnupg
-
-    Vault()
-  except ImportError:
-    printError("Required module 'gnupg' not found. Please install it by running 'pip install python-gnupg' as root.", 1)
-  except Exception as err:
-    printError('{0}'.format(str(err)), 2)
-
+        Vault()
+    except ImportError:
+        print_error("Required module 'gnupg' not found. Please install it by running 'pip install python-gnupg' as root.", 1)
+    except Exception as err:
+        print_error('{0}'.format(str(err)), 2)
