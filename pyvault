@@ -16,13 +16,13 @@ from pprint import pprint
 # printMsg
 #---------------------------------------------
 def printMsg(errorMessage):
-  print "[*] {0}".format(errorMessage)
+  print("[*] {0}".format(errorMessage))
 
 #---------------------------------------------
 # printError
 #---------------------------------------------
 def printError(errorMessage, errorCode):
-  print "[!] {0}".format(errorMessage)
+  print("[!] {0}".format(errorMessage))
   exit(errorCode)
 
 #---------------------------------------------
@@ -49,12 +49,12 @@ class cPrompt(cmd.Cmd):
     a = args.split()
 
     if len(a) != 2:
-      print '*** Invalid arguments'
+      print('*** Invalid arguments')
       return
 
     try:
       self.store.write(a[0], a[1])
-    except Exception, err:
+    except Exception as err:
       print('*** {0}'.format(str(err)))
 
   def do_read(self, args):
@@ -62,12 +62,12 @@ class cPrompt(cmd.Cmd):
     a = args.split()
 
     if len(a) != 1:
-      print '*** Invalid arguments'
+      print('*** Invalid arguments')
       return
 
     try:
       self.store.read(args)
-    except Exception, err:
+    except Exception as err:
       print('*** {0}'.format(str(err)))
 
   def do_delete(self, args):
@@ -75,12 +75,12 @@ class cPrompt(cmd.Cmd):
     a = args.split()
 
     if len(a) != 1:
-      print '*** Invalid arguments'
+      print('*** Invalid arguments')
       return
 
     try:
       self.store.delete(args)
-    except Exception, err:
+    except Exception as err:
       print('*** {0}'.format(str(err)))
 
   def do_quit(self, args):
@@ -177,7 +177,7 @@ class Store(object):
     obj = self.content
 
     if key == '/':
-      print json.dumps(obj)
+      print(json.dumps(obj))
     else:
       indexes = key.split('/')[1:]
 
@@ -191,9 +191,9 @@ class Store(object):
         exit(2)
 
       if isinstance(obj[indexes[-1]], basestring):
-        print obj[indexes[-1]]
+        print(obj[indexes[-1]])
       else:
-        print json.dumps(obj[indexes[-1]])
+        print(json.dumps(obj[indexes[-1]]))
 
   #---------------------------------------------
   # Store::delete
@@ -235,13 +235,13 @@ class Store(object):
     self.dumpAll(self.content, [])
 
   def dumpAll(self, d, l):
-    for key, val in d.iteritems():
+    for key, val in d.items():
       if isinstance(val, dict):
         l.append(key)
         self.dumpAll(val, l)
         del l[-1]
       else:
-        print "/{0}/{1} {2}".format('/'.join(l), key, val).replace('//', '/')
+        print("/{0}/{1} {2}".format('/'.join(l), key, val).replace('//', '/'))
 
 
   #---------------------------------------------
@@ -252,7 +252,7 @@ class Store(object):
     return self.dumpAllKeys(self.content, [], [])
 
   def dumpAllKeys(self, d, l, r):
-    for key, val in d.iteritems():
+    for key, val in d.items():
       if isinstance(val, dict):
         l.append(key)
         self.dumpAllKeys(val, l, r)
@@ -326,8 +326,8 @@ class Vault(object):
   # Vault::__init__
   #---------------------------------------------
   def __init__(self):
-    if os.environ.has_key('VAULT'):
-      self.vault=os.environ.get('VAULT')
+    if 'VAULT' in os.environ:
+      self.vault = os.environ.get('VAULT')
 
     parser = cParser(
       description=self.description, add_help=False, usage='''pyvault <command>
@@ -440,6 +440,6 @@ if __name__ == '__main__':
     Vault()
   except ImportError:
     printError("Required module 'gnupg' not found. Please install it by running 'pip install python-gnupg' as root.", 1)
-  except Exception, err:
+  except Exception as err:
     printError('{0}'.format(str(err)), 2)
 
